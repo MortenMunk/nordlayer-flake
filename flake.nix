@@ -67,44 +67,44 @@
         pkgs.patchelf
       ];
     };
+  };
 
-    nixosModules = {
-      nordlayer = {
-        config,
-        lib,
-        pkgs,
-        ...
-      }: {
-        options.services.nordlayer.enable =
-          lib.mkEnableOption "NordLayer integration (package + systemd + nix-ld)";
+  nixosModules = {
+    nordlayer = {
+      config,
+      lib,
+      pkgs,
+      ...
+    }: {
+      options.services.nordlayer.enable =
+        lib.mkEnableOption "NordLayer integration (package + systemd + nix-ld)";
 
-        options.services.nordlayer.extraNixLdLibraries = lib.mkOption {
-          type = lib.types.listOf lib.types.package;
-          default = with pkgs; [pkgs.libcap_ng];
-          example = lib.literalExpression "with pkgs; [ openssl zlib ]";
-          description = "Extra libraries for nix-ld if NordLayer dlopens them.";
-        };
+      options.services.nordlayer.extraNixLdLibraries = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = with pkgs; [pkgs.libcap_ng];
+        example = lib.literalExpression "with pkgs; [ openssl zlib ]";
+        description = "Extra libraries for nix-ld if NordLayer dlopens them.";
+      };
 
-        config = lib.mkIf config.services.nordlayer.enable {
-          environment.systemPackages = [
-            self.packages.${pkgs.stdenv.hostPlatform.system}.nordlayer
-          ];
+      config = lib.mkIf config.services.nordlayer.enable {
+        environment.systemPackages = [
+          self.packages.${pkgs.stdenv.hostPlatform.system}.nordlayer
+        ];
 
-          programs.nix-ld.enable = true;
-          programs.nix-ld.libraries = config.services.nordlayer.extraNixLdLibraries;
+        programs.nix-ld.enable = true;
+        programs.nix-ld.libraries = config.services.nordlayer.extraNixLdLibraries;
 
-          systemd.services.nordlayer = {
-            description = "NordLayer Daemon";
-            wantedBy = ["multi-user.target"];
-            after = ["network.target"];
+        systemd.services.nordlayer = {
+          description = "NordLayer Daemon";
+          wantedBy = ["multi-user.target"];
+          after = ["network.target"];
 
-            serviceConfig = {
-              ExecStart = "${self.packages.${pkgs.stdenv.hostPlatform.system}.nordlayer}/sbin/nordlayerd";
-              RuntimeDirectory = "nordlayer";
-              RuntimeDirectoryMode = "0755";
-              Restart = "on-failure";
-              Type = "simple";
-            };
+          serviceConfig = {
+            ExecStart = "${self.packages.${pkgs.stdenv.hostPlatform.system}.nordlayer}/sbin/nordlayerd";
+            RuntimeDirectory = "nordlayer";
+            RuntimeDirectoryMode = "0755";
+            Restart = "on-failure";
+            Type = "simple";
           };
         };
       };
